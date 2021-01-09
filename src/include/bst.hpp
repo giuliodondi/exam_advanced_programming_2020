@@ -20,16 +20,14 @@ class bst;
 template <typename K, typename T, typename CMP >
 class bst{
 			
-	template <typename, typename > friend class bst_node;
+	
 	
 	using node = bst_node<const K,T>;
 	using content_type = std::pair<const K, T>;
-	using const_content_type = const std::pair<const K, T>;
 	
 	
 	std::unique_ptr<node>  root;
 	std::size_t _nodes;
-	
 	CMP comp_operator;	
 	
 	
@@ -37,7 +35,7 @@ class bst{
 
 		
 	using iterator = bst_iterator<const K, T, content_type , CMP>;
-  	using const_iterator = bst_iterator<const K, T, const_content_type, CMP>;
+  	using const_iterator = bst_iterator<const K, T, const content_type, CMP>;
 	
 
 	
@@ -113,6 +111,9 @@ class bst{
 	}
 	
 	
+	//std::pair<iterator, bool> insert(const content_type& new_content);
+	//std::pair<iterator, bool> insert(content_type&& new_content);
+	
 	template<class... Types>
 	std::pair<iterator,bool> emplace(Types&&... args)
 	{
@@ -125,27 +126,27 @@ class bst{
 		_nodes=0;
 	};
 	
-	iterator begin() {
+	auto begin() noexcept {
 		return 	iterator{endnode(root.get(),direction::left)};
 	}
 	
-	const_iterator begin() const {
+	auto begin() const noexcept {
 		return 	const_iterator{endnode(root.get(),direction::left)};
 	}
 	
-	const_iterator cbegin() const {
+	auto cbegin() const noexcept {
 		return 	const_iterator{endnode(root.get(),direction::left)};
 	}
 	
-	iterator end() {
+	auto end() noexcept {
 		return 	iterator{nullptr};
 	}
 	
-	const_iterator end() const {
+	auto end() const noexcept {
 		return 	const_iterator{nullptr};
 	}
 	
-	const_iterator cend() const {
+	auto cend() const noexcept {
 		return 	const_iterator{nullptr};
 	}
 	
@@ -270,6 +271,7 @@ class bst{
 
 template <typename K, typename T, typename CMP >
 template <typename P >
+//std::pair< bst_iterator<K, T,  CMP>, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
 std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
 
 
@@ -318,7 +320,60 @@ std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& 
 
 }
 
+/*
 
+template <typename K, typename T, typename CMP >
+template <typename P >
+//std::pair< bst_iterator<K, T,  CMP>, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
+std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
+
+
+		node* head = root.get();
+			
+		while (head) {
+			//if the comparison is positive go left
+			if ( comp_operator(  new_content.first,  head->content().first  ) ) {
+
+				if (head->left().get()) {
+					head = head->left().get();	
+				}
+				else {
+					++_nodes;
+					head->attach(direction::left, std::forward<P>(new_content), head );
+					iterator out_iter{head->left().get()};
+					return std::pair<iterator, bool> {out_iter, true};
+				}
+
+			}
+			else if ( comp_operator( head->content().first, new_content.first  ) ) {
+				if (head->right().get()) {
+					head = head->right().get();	
+				}
+				else {
+					++_nodes;
+					head->attach(direction::right, std::forward<P>(new_content), head );
+					iterator out_iter{head->right().get()};
+					return std::pair<iterator, bool> {out_iter, true};
+				}
+			}
+			else {
+				//failing the comparison and reverse comparison means the values are equal
+				iterator out_iter{head};
+				return std::pair<iterator, bool> {out_iter, false};
+			}
+
+		}
+
+		_nodes=1;
+		root.reset(new node( new_content ) );
+		//root = std::make_unique<node>(new_content);;
+		iterator out_iter{root.get()};
+		return std::pair<iterator, bool> {out_iter, true};
+
+
+}
+
+*/
 
 template <typename K, typename T, typename CMP >
 typename bst<K, T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) {

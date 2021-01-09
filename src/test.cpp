@@ -16,7 +16,7 @@ int main() {
 	
 	//feed in positive and negative numbers
 	for (auto i=1; i<10; ++i) {
-		auto x = std::pair<int,int>( ( i%2) ? -i : i , int{} );
+		auto x = std::pair<const int,int>( ( i%2) ? -i : i , i );
 		tree1.insert(x);
 	}
 	
@@ -43,45 +43,63 @@ int main() {
 	
 	
 	//make a smaller tree
-	tree1.insert(std::pair<int,int> (2,222));
-	tree1.insert(std::pair<int,int> (1,111));
-	tree1.insert(std::pair<int,int> (3,333));
-	
-	//try to insert a key that already exists
-	const std::pair<int, int> mypair{2,222};
+	//std::make_pair<int&, int&>{2,222};
+	int k = 2;
+	int v = 222;
+	auto mypair = std::pair<const int, int>(k,v);
 	tree1.insert(mypair);
+	k = 1;
+	v = 111;
+	tree1.insert(std::pair<const int, int>(k,v));
+	tree1.insert(std::pair<const int,int> (3,333));
+	
+
 
 	std::cout << std::endl << "new tree1\n" <<  tree1 << std::endl;
 	
-	
 	//test copy constructor
 	const bst<int,int,std::greater<int>> tree2{tree1};
-	std::cout << std::endl << "tree2 copy of 1\n" <<  tree2 << std::endl;
-	
+	std::cout << std::endl << "tree2 copy constructed from 1\n" <<  tree2 << std::endl;
 	
 	//test copy assign
 	std::cout << std::endl << "clearing tree1 " << std::endl;
 	tree1.clear();
 	tree1 = tree2;
-	std::cout << std::endl << "tree1 copy of 2\n" <<  tree1 << std::endl;
-	std::cout << std::endl << "tree2\n" <<  tree1 << std::endl;
+	std::cout << std::endl << "tree1 copy assigned from 2\n" <<  tree1 << std::endl;
+	std::cout << std::endl << "tree2\n" <<  tree2 << std::endl;
+	
+	//test move constructor
+	std::cout << std::endl << "moving tree1 into tree3\n" << std::endl;
+	bst<int,int,std::greater<int>>  tree3 {std::move(tree1)};
+	std::cout << std::endl << "tree3\n" <<  tree3 << std::endl;
 	
 	
+	//test move assign
+	std::cout << std::endl << "moving tree3 into tree1\n"<< std::endl;
+	tree1 = bst<int,int,std::greater<int>> {std::move(tree3)};
+	std::cout << std::endl << "tree1\n" <<  tree1 << std::endl;
 	
-	//testing the iterators
+	
+	//testing subscript operator
+	std::cout <<  tree1[3] << std::endl;
+	std::cout <<  tree1[4] << std::endl;
+	
+	//testing the iterators and *, -> operators
+	std::cout << std::endl <<"iterators" << std::endl;
 	auto iter = tree1.begin();
 	(iter.node()) ? std::cout << "iterator is at key " <<  iter->first << std::endl : std::cout << "iterator is at the end " << std::endl; 
-	iter++;
-	(iter.node()) ? std::cout << "iterator is at key " <<  iter->first << std::endl : std::cout << "iterator is at the end " << std::endl; 
+	bst<int,int,std::greater<int>>::iterator iter_;
+	iter_ = ++iter;
+	(iter_.node()) ? std::cout << "iterator is at key " <<  (*iter_).first << std::endl : std::cout << "iterator is at the end " << std::endl; 
 	iter = tree1.end();
-	(iter.node()) ? std::cout << "iterator is at key " <<  iter->first << std::endl : std::cout << "iterator is at the end " << std::endl; 
+	(iter.node()) ? std::cout << "iterator is at key " <<  (*iter).first << std::endl : std::cout << "iterator is at the end " << std::endl; 
 	
 	
 	//test find 
 	int a = 3;
 	auto iter2 = tree1.find(a);
 	(iter2.node() && (iter2->first == a )) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl; 
-	const auto b = 4;
+	const auto b = 5;
 	iter2 = tree1.find(b);
 	(iter2.node() && (iter2->first == b )) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
 	a = 4; 
@@ -108,7 +126,7 @@ int main() {
 	
 	
 	return 0;
-	//std::cout <<  mytree[4] << std::endl;
+	//
 	
 	/*
 	

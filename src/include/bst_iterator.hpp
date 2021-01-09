@@ -1,10 +1,7 @@
 #pragma once
 
-#include <algorithm>
 #include <iostream>
-#include <iterator>
-#include <memory>
-#include <utility>
+//#include <iterator>
 
 
 
@@ -26,35 +23,36 @@ class bst_iterator {
 	using iterator_category = std::forward_iterator_tag;
 	
 	bst_iterator() = default;
-	explicit bst_iterator(node_t* n) : cur{n} {}
+	explicit bst_iterator(node_t* n) noexcept
+	: cur{n}
+	{}
 	
 	~bst_iterator() = default;
 	
-	content_ref operator*() const {
+	content_ref operator*() const noexcept {
 		return cur->content();
 	}
 	
-	content_ptr operator->() const {
+	content_ptr operator->() const noexcept{
 		return &**this;	
 	}
 	
 	
-	friend bool operator == (const  bst_iterator &a , const bst_iterator &b ) {
+	friend bool operator == (const  bst_iterator &a , const bst_iterator &b ) noexcept {
 		return a.cur == b.cur;	
 	}
 	
-	friend bool operator != ( const bst_iterator &a , const bst_iterator &b ) {
+	friend bool operator != ( const bst_iterator &a , const bst_iterator &b ) noexcept {
 		return !(a==b);	
 	}
 	
 	
-	bst_iterator& operator++() {
-		
+	bst_iterator& operator++()  {
 		cur = nextnode( cur);
 		return *this;
 	}
 	
-	bst_iterator operator++(int) {
+	bst_iterator operator++(int)  {
 		auto tmp{*this};
 		++(*this);
 		return tmp;
@@ -71,11 +69,11 @@ class bst_iterator {
 	
 };
 
+//returns a pointer to the next node in the tree
 template <typename K, typename T, typename CONT, typename CMP>
 bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 
 	/*
-	returns a pointer to the next node in the tree
 	head starts at the current node 
 
 	if the current node has right descendants:
@@ -92,7 +90,6 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 		then by returning head(nullptr) we signal that we are at the end
 
 	*/
-
 
 	if (head) {
 		if (head->right().get()) {

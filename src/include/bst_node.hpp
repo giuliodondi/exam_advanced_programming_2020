@@ -11,6 +11,8 @@ enum class direction{left, right};
 template <typename K, typename T>
 class bst_node {
 	
+	template <typename, typename, typename > friend class bst;
+	
 	using content_type = std::pair<const K, T>;
 	
 	content_type _content;
