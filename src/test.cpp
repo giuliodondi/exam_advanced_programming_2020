@@ -23,6 +23,8 @@ int main() {
 	//test print 
 	std::cout << std::endl << "full unbalanced tree\n " <<  tree1 << std::endl;
 	
+
+	
 	//test emplace
 	tree1.emplace(1,111);
 	tree1.emplace(3,333);
@@ -81,14 +83,15 @@ int main() {
 	
 	
 	//testing subscript operator
+	std::cout << std::endl << "lookng for the l-value key 3\n"<< std::endl;
 	int find=3;
 	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
 	int newval = 1234;
 	std::cout << "changing the value to "<< newval << std::endl;
 	tree1[find] = newval;
 	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
-	find = 4;
-	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
+	std::cout << std::endl << "lookng for the r-value key 4\n"<< std::endl;
+	std::cout << "tree1[4]=" << tree1[4] << std::endl;
 	
 	//testing the iterators and *, -> operators
 	std::cout << std::endl <<"iterators" << std::endl;
@@ -103,17 +106,31 @@ int main() {
 	
 	//test find 
 	int a = 3;
+	int b = 5;
 	auto iter2 = tree1.find(a);
 	(iter2.node() && (iter2->first == a )) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl; 
-	const auto b = 5;
 	iter2 = tree1.find(b);
 	(iter2.node() && (iter2->first == b )) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
-	a = 4; 
-	//std::cout << std::endl << "is key " << a << "in tree1? " <<  tree1.has_key(a) << std::endl;
 	
 	
+	
+	//testing constant iterators on constant tree2
 	std::cout << std::endl <<"const iterators" << std::endl;
-    for (auto itr = tree1.cbegin(); itr != tree1.cend(); ++itr)
+	auto c_iter = tree2.find(a);
+	(c_iter.node() && (c_iter->first == a )) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl;
+	c_iter = tree2.find(b);
+	(c_iter.node() && (c_iter->first == b )) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
+    
+	
+	
+	//testing iterations on tree and const tree
+	std::cout << std::endl <<"iterating on tree1" << std::endl;
+	for (auto itr = tree1.begin(); itr != tree1.end(); ++itr)
+    {
+		(itr.node()) ? std::cout << "iterator is at key " <<  itr->first << std::endl : std::cout << "iterator is at the end " << std::endl; 
+    }
+	std::cout << std::endl <<"iterating on tree" << std::endl;
+	for (auto itr = tree2.begin(); itr != tree2.end(); ++itr)
     {
 		(itr.node()) ? std::cout << "iterator is at key " <<  itr->first << std::endl : std::cout << "iterator is at the end " << std::endl; 
     }

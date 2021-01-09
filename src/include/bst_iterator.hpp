@@ -58,7 +58,11 @@ class bst_iterator {
 		return tmp;
 	}
 	
-	node_t* node( ) {
+	node_t* node( ) noexcept {
+		return cur;
+	}
+	
+	node_t* node( ) const noexcept {
 		return cur;
 	}
 	  
