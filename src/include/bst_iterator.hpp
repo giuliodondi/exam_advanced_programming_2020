@@ -92,18 +92,18 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 	*/
 
 	if (head) {
-		if (head->right().get()) {
+		if (head->right()) {
 
 			#ifdef TREE_DBG
 			std::cout <<"moving to the right" << std::endl;
 			#endif
 
-			head = head->right().get();
-			while ( head->left().get()) {
+			head = head->right();
+			while ( head->left()) {
 				#ifdef TREE_DBG
 				std::cout <<"descending to the left" << std::endl;
 				#endif
-				head = head->left().get();
+				head = head->left();
 			}
 		}
 		else {
@@ -114,10 +114,10 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 			head = head->prev()	;
 
 			while  (head) {
-				if (head->left().get() == tmp) {
+				if (head->left() == tmp) {
 					break;
 				}
-				else if (head->right().get() == tmp) {
+				else if (head->right() == tmp) {
 					#ifdef TREE_DBG
 					std::cout <<"moving up" << std::endl;
 					#endif

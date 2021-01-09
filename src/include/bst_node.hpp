@@ -67,12 +67,12 @@ class bst_node {
 		return _content;	
 	}
 
-	std::unique_ptr<bst_node>& left() {
-		return 	_left;
+	bst_node* left() {
+		return 	_left.get();
 	}
 
-	std::unique_ptr<bst_node>& right() {
-		return 	_right;
+	bst_node* right() {
+		return 	_right.get();
 	}
 
 	bst_node*  prev() const {

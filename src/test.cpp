@@ -81,8 +81,14 @@ int main() {
 	
 	
 	//testing subscript operator
-	std::cout <<  tree1[3] << std::endl;
-	std::cout <<  tree1[4] << std::endl;
+	int find=3;
+	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
+	int newval = 1234;
+	std::cout << "changing the value to "<< newval << std::endl;
+	tree1[find] = newval;
+	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
+	find = 4;
+	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
 	
 	//testing the iterators and *, -> operators
 	std::cout << std::endl <<"iterators" << std::endl;
