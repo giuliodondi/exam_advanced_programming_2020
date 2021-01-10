@@ -3,6 +3,7 @@
 #include <iterator>
 #include <memory>
 #include <utility>
+#include <vector>
 #include <math.h>
 
 #ifndef BST_H
@@ -14,6 +15,15 @@ class bst;
 
 #include "bst_node.hpp"
 #include "bst_iterator.hpp"
+
+
+struct exception_during_balance {
+	std::string except_msg;
+	
+	exception_during_balance(std::string s)
+	: except_msg{std::move(s)}
+	{}
+};
 
 
 template <typename K, typename T, typename CMP >
@@ -155,20 +165,23 @@ class bst{
 		return _balanced( root.get() );
 	}
 	
-	/*
-	bool has_key(const K& key ) const {
-		auto find_key = key;
-		auto elem = find(find_key);
-		if 	( elem==end() ) {
-			return false;	
-		}
-		else {
-			return true;	
-		}
-	}
-	*/
 	
-	void balance(); 
+	void balance() {
+		std::unique_ptr<node> tree_bk;
+		copy_tree( tree_bk, nullptr, root.get() ) ;
+		
+		try {
+			_balance();
+		}
+		catch (...) {
+			std::cout << "Error occured during balancing.\n"
+				<< "Reverting the tree to its original state." << std::endl;
+			root.reset(tree_bk.release());
+		}
+		
+	}; 
+	
+	//void balance2(); 
 	
 	friend std::ostream& operator<<(std::ostream& os, const bst& x) {		
 		os <<  "Size[" << x.size() << "]  Depth[" << x.depth() << "]"<< std::endl;
@@ -240,9 +253,10 @@ class bst{
 		return flag;
 	}
 
-	void rotate(node* oldroot, std::unique_ptr<node>& root_link, direction dir);
-		
-	void straighten_right( ) ;
+
+	void _balance();
+	
+	node* build_tree_recursive( std::vector<std::unique_ptr<node>>& ptr_vec, int start, int end );
 	
 };
 
@@ -346,7 +360,6 @@ T&  bst<K,T, CMP>::subscripting( O&& key) {
 
 template <typename K, typename T, typename CMP >
 typename bst<K,T, CMP>::node*  bst<K,T, CMP>::_find(const K& key) const{
-//typename bst<K, T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) {
 		
 	node* head = root.get();
 			
@@ -372,144 +385,72 @@ typename bst<K,T, CMP>::node*  bst<K,T, CMP>::_find(const K& key) const{
 
 
 
-
 template <typename K, typename T, typename CMP >
-void bst<K,T, CMP>::balance() {
+void bst<K,T, CMP>::_balance() {
 	
 	if (!is_balanced() ) {
-		straighten_right();
+	
+		std::vector<node*> store_nodes_tmp;
+		std::vector<std::unique_ptr<node>> store_nodes;
 
-		node* head{root.get()};
-
-
-		size_t _size = size();
-		size_t _balanced_size = static_cast<size_t>( pow(2, floor(std::log2( _size + 1 )) ) ) - 1 ;
-
-		size_t bottom_n{  _size - _balanced_size };
-
-		for (size_t i=0; i< bottom_n; ++i) {
-			if (i==0) {
-				rotate( root.get(), root , direction::left);	
-				head = root.get();
-			}
-			else {
-				rotate( head->right(), head->_right , direction::left);	
-				head = head->right();
-			}
+		for ( auto iter = begin(); iter != end(); iter++) {
+			store_nodes_tmp.push_back(iter.node());
 		}
 
 
-		head = root.get();
+		for ( auto iter = store_nodes_tmp.begin(); iter != store_nodes_tmp.end(); iter++) {
 
-		auto t = _balanced_size;		
-		while (t>1) {
-			t = floor(static_cast<double>(t)/2);
-			for (size_t i=0; i< t; ++i) {
-				if (i==0) {
-					rotate( root.get(), root , direction::left);	
-					head = root.get();
-				}
-				else {
-					rotate( head->right(), head->_right , direction::left);	
-				head = head->right();
-				}
-			}
-
-		}
-
-		/*
-		//final check
-		if (!is_balanced() ) {
-			std::cout << "error during balancing" << std::endl;	
-		} else {
-			std::cout << "succesfully balanced" << std::endl;		
-		}
-		*/
-		
-	}
-}
-
-template <typename K, typename T, typename CMP >
-void bst<K,T, CMP>::straighten_right() {
-	node* head{root.get()};
-	node* prev{nullptr};
-
-	while(head) {
-		while (head->left()) {
-			//rotate( head, direction::right);
-
-			if (!prev) {
-				rotate( head, root , direction::right);
-				head = root.get();	
+			std::unique_ptr<node> this_node;
+			if ((*iter)->prev()) {
+				(*iter)->detach_prev();
+				this_node.reset(*iter);
 			} else {
-				rotate( head, prev->_right, direction::right);
-				head = prev->right();	
+				root.release();
+				this_node.reset(*iter);
 			}
+
+			store_nodes.push_back(std::move(this_node));
+
 		}
-		prev = head;
-		head = prev->right();
+
+
+		root.reset( build_tree_recursive( store_nodes, 0 , store_nodes.size() ) );
+		root.get()->set_prev(nullptr);
+	
 	}
+	//final check
+	if (!is_balanced() ) {
+		throw exception_during_balance{"Balancing did not produce a balanced tree."};
+	}
+		
 }
 
 template <typename K, typename T, typename CMP >
-void bst<K,T, CMP>::rotate(node* oldroot, std::unique_ptr<node>& root_link, direction dir) {
+typename bst<K,T, CMP>::node* bst<K,T, CMP>::build_tree_recursive( std::vector<std::unique_ptr<node>>& ptr_vec, int start, int end ) {
+	
+	int subtree_mid = floor( static_cast<double>(end - start)/2 );
+	int sub_root_idx{start + subtree_mid};
+
+	node* sub_root_node{ptr_vec[sub_root_idx].get() };
+	
+	if (subtree_mid == 0) {
+		sub_root_node->_left.reset(nullptr);
+		sub_root_node->_right.reset(nullptr);
+	}
+	else {
+		node* left_subtree{build_tree_recursive( ptr_vec, start , sub_root_idx )};
+		sub_root_node->attach(direction::left, left_subtree );
+		sub_root_node->left()->set_prev(sub_root_node);
 		
-	node* root_p{nullptr};
-	if (oldroot->prev()) {
-		root_p = oldroot->prev();
-	}
-	
-	//detach the old root from whatever is above
-	root_link.release();
-
-	node* newroot;
-	node* newsub{nullptr};
-
-	switch (dir){
-		case direction::left: {			
-			//detach the new root from the old root
-			//detach the left subtree from the new root if it exists
-			
-			newroot = oldroot->detach_right();
-			if (newroot->_left) {
-				newsub = newroot->detach_left();
-			} 
-			
-			//attach the subtree to the old root
-			//attach the old root to the new root
-			
-			newroot->attach( direction::left, oldroot);
-			if (newsub) {
-				oldroot->attach( direction::right, newsub);
-			}
-
-			break;
-		}
-		case direction::right: {
-			//detach the new root from the old root
-			//detach the right subtree from the new root if it exists
-			
-			newroot = oldroot->detach_left();
-			if (newroot->_right) {
-				newsub = newroot->detach_right();
-			} 
-			
-			//attach the subtree to the old root
-			//attach the old root to the new root
-			
-			newroot->attach( direction::right, oldroot);
-			if (newsub) {
-				oldroot->attach( direction::left, newsub);
-			}
-
-			break;
+		if (sub_root_idx<end - 1) {
+			node* right_subtree{build_tree_recursive( ptr_vec, sub_root_idx+1 , end )};
+			sub_root_node->attach(direction::right,right_subtree  );
+			sub_root_node->right()->set_prev(sub_root_node);
 		}
 	}
+		
+	return ptr_vec[sub_root_idx].release();
 	
-	//fix the link between new root and parent
-	newroot->set_prev( root_p );
-	root_link.reset(newroot);
-
 }
 
 

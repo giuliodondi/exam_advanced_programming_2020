@@ -88,11 +88,11 @@ class bst_node {
 		//handling to prevent the creation of a closed loop in the tree
 		//if the new prevnode is the node itself
 		if (prevnode==this) {
-			throw std::logic_error("Tried to set the parent node of a node to itself.");
+			throw std::invalid_argument("Tried to set the parent node of a node to itself.");
 			return;
 		//if the new prevnode is one of the chjildren, if they are not null
 		} else if ( ((_left) && (prevnode==left())) || ((_right) && (prevnode==right())) ) {
-			throw std::logic_error("Tried to set the parent node of a node to  one of its children.");
+			throw std::invalid_argument("Tried to set the parent node of a node to  one of its children.");
 			return;	
 		}
 		
@@ -100,22 +100,31 @@ class bst_node {
 	}
 
 	void attach( direction dir, bst_node* new_node){
-
+		
 		switch (dir){
 			case direction::left:
 				_left.reset(new_node);
-				_left->set_prev(this);
 			break;
 			case direction::right:
 				_right.reset(new_node);	
-				_right->set_prev(this);
 			break;
+		}
+		
+		if (new_node) {
+			switch (dir){
+				case direction::left:
+					_left->set_prev(this);
+				break;
+				case direction::right:
+					_right->set_prev(this);
+				break;
+			}
 		}
 
 	}
 
 	template <typename P >	
-	void attach( direction dir, P&& new_content){
+	void attach( direction dir, P&& new_content) {
 		
 		switch (dir){
 			case direction::left:
@@ -127,13 +136,38 @@ class bst_node {
 		}
 	}
 	
-	bst_node* detach_left() {
+	bst_node* detach_left() noexcept {
 		return _left.release();	
 	}
 	
-	bst_node* detach_right() {
+	bst_node* detach_right() noexcept {
 		return _right.release();	
 	}
+	
+	
+	void detach_below( bst_node* ptr_below ) {
+		
+		if (ptr_below == left() ){
+			detach_left();	
+		}
+		else if (ptr_below == right() ){
+			detach_right();	
+		}
+		/*
+		else {
+			throw std::logic_error("Cannot detach a non-children node.");
+		}
+		*/
+		
+	}
+
+	
+	bst_node* detach_prev() {
+		
+		_prev->detach_below(this);
+		return this;	
+	}
+	
 	
 
 };

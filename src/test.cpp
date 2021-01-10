@@ -11,7 +11,7 @@ int main() {
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	std::cout << "is balanced? : " << tree1.is_balanced() << std::endl;
 	
-
+	
 	
 	//feed in positive and negative numbers
 	for (auto i=1; i<10; ++i) {
@@ -23,7 +23,8 @@ int main() {
 	//test print 
 	std::cout << std::endl << "full unbalanced tree\n " <<  tree1 << std::endl;
 	
-
+	
+	
 	
 	//test emplace
 	tree1.emplace(-1,111);
@@ -38,13 +39,13 @@ int main() {
 	tree1.balance() ; 
 	std::cout << std::endl << "balanced tree1\n" <<  tree1 << std::endl;
 	
+	
 	//test clear
 	std::cout << std::endl << "clearing tree1 " << std::endl;
 	tree1.clear();
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	
-	return 0;
-	
+
 	//make a smaller tree
 	//std::make_pair<int&, int&>{2,222};
 	int k = 2;
