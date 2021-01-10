@@ -1,6 +1,4 @@
-#include "bst_node.hpp"
 #include "bst.hpp"
-#include "bst_iterator.hpp"
 
 
 #include <iostream>
@@ -12,11 +10,13 @@ int main() {
 	bst<int,int,std::greater<int>> tree1{};
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	std::cout << "is balanced? : " << tree1.is_balanced() << std::endl;
+	
 
 	
 	//feed in positive and negative numbers
 	for (auto i=1; i<10; ++i) {
-		auto x = std::pair<const int,int>( ( i%2) ? -i : i , i );
+		//auto x = std::pair<const int,int>( ( i%2) ? -i : i , i );
+		auto x = std::pair<const int,int>(i,i);
 		tree1.insert(x);
 	}
 	
@@ -26,8 +26,8 @@ int main() {
 
 	
 	//test emplace
-	tree1.emplace(1,111);
-	tree1.emplace(3,333);
+	tree1.emplace(-1,111);
+	tree1.emplace(-3,333);
 		
 	//test print 
 	std::cout << std::endl << "full unbalanced tree after emplace\n" <<  tree1 << std::endl;
@@ -43,6 +43,7 @@ int main() {
 	tree1.clear();
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	
+	return 0;
 	
 	//make a smaller tree
 	//std::make_pair<int&, int&>{2,222};
@@ -62,6 +63,10 @@ int main() {
 	//test copy constructor
 	const bst<int,int,std::greater<int>> tree2{tree1};
 	std::cout << std::endl << "tree2 copy constructed from 1\n" <<  tree2 << std::endl;
+	//modify the first tree 
+	tree1.emplace(-1,-111);
+	std::cout << std::endl << "tree1 after modification\n" <<  tree1 << std::endl;
+	std::cout << std::endl << "tree2 \n" <<  tree2 << std::endl;
 	
 	//test copy assign
 	std::cout << std::endl << "clearing tree1 " << std::endl;

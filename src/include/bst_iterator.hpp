@@ -23,11 +23,11 @@ class bst_iterator {
 	using iterator_category = std::forward_iterator_tag;
 	
 	bst_iterator() = default;
-	explicit bst_iterator(node_t* n) noexcept
+	explicit bst_iterator(node_t* n)
 	: cur{n}
 	{}
 	
-	~bst_iterator() = default;
+	~bst_iterator() noexcept = default;
 	
 	content_ref operator*() const noexcept {
 		return cur->content();
@@ -114,19 +114,23 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 			#ifdef TREE_DBG
 			std::cout <<"moving up"  << std::endl;
 			#endif
-			auto tmp{head};
+			auto tail{head};
 			head = head->prev()	;
 
 			while  (head) {
-				if (head->left() == tmp) {
+				if (head->left() == tail) {
 					break;
 				}
-				else if (head->right() == tmp) {
+				else if (head->right() == tail) {
 					#ifdef TREE_DBG
 					std::cout <<"moving up" << std::endl;
 					#endif
-					tmp = head;
+					tail = head;
 					head = head->prev()	;
+				}
+				else {
+					//if the tail is not equal to either left or right nodes there is a link mismatch
+					throw std::logic_error("Did not iterate to a node from one of its children.");
 				}
 			}
 			#ifdef TREE_DBG

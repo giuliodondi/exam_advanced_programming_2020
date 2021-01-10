@@ -39,20 +39,20 @@ class bst{
 	//constructor(s)
 	
 	
-	explicit bst( ) noexcept
+	explicit bst( )
 	: root{nullptr}, _nodes{0}, comp_operator{}
 	{
-		printf("tree constructor\n");
+		//printf("tree constructor\n");
 	}
 	
 	
-	~bst() = default;
+	~bst() noexcept = default;
 	
 	
 	//move semantics
 	
-	bst(bst&& x ) = default;
-	bst &operator=(bst && x) = default;
+	bst(bst&& x ) noexcept = default;
+	bst &operator=(bst && x) noexcept  = default;
 	
 
 	//copy semantics
@@ -60,7 +60,7 @@ class bst{
 	bst( const bst &x)
 	:_nodes{x._nodes}, comp_operator{x.comp_operator}
 	{
-		printf("copy constructor\n");
+		//printf("copy constructor\n");
 		if (x.root) {
 			copy_tree( root, nullptr,  x.root.get() ) ;
 		}
@@ -69,7 +69,7 @@ class bst{
 	
 	bst& operator=( const bst &x) {
 		
-		printf("copy assign\n");
+		//printf("copy assign\n");
 		root.reset();
 		auto tmp_bst = x;
 		*this = std::move(tmp_bst);
@@ -83,12 +83,12 @@ class bst{
 	
 	
 	std::pair<iterator, bool> insert(const content_type& new_content) {
-		printf("l-insert\n");
+		//printf("l-insert\n");
 		return _insert(new_content);
 	}
 	
 	std::pair<iterator, bool> insert(content_type&& new_content) {
-		printf("r-insert\n");
+		//printf("r-insert\n");
 		return _insert(std::move(new_content));
 	}
 	
@@ -143,15 +143,15 @@ class bst{
 	}
 	
 	
-	size_t size() const {
+	auto size() const {
 		return _nodes;	
 	}
 	
-	size_t depth() const {
+	auto depth() const {
 		return 	_depth(root.get() );
 	}
 	
-	bool is_balanced() const{
+	auto is_balanced() const{
 		return _balanced( root.get() );
 	}
 	
@@ -264,7 +264,7 @@ std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& 
 			}
 			else {
 				++_nodes;
-				head->attach(direction::left, std::forward<P>(new_content), head );
+				head->attach(direction::left, std::forward<P>(new_content) );
 				iterator out_iter{head->left()};
 				return std::pair<iterator, bool> {out_iter, true};
 			}
@@ -276,7 +276,7 @@ std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& 
 			}
 			else {
 				++_nodes;
-				head->attach(direction::right, std::forward<P>(new_content), head );
+				head->attach(direction::right, std::forward<P>(new_content) );
 				iterator out_iter{head->right()};
 				return std::pair<iterator, bool> {out_iter, true};
 			}
@@ -381,50 +381,50 @@ void bst<K,T, CMP>::balance() {
 
 		node* head{root.get()};
 
-		if (head) {
-			size_t _size = size();
-			size_t _balanced_size = static_cast<size_t>( pow(2, floor(std::log2( _size + 1 )) ) ) - 1 ;
 
-			size_t bottom_n{  _size - _balanced_size };
+		size_t _size = size();
+		size_t _balanced_size = static_cast<size_t>( pow(2, floor(std::log2( _size + 1 )) ) ) - 1 ;
 
-			for (size_t i=0; i< bottom_n; ++i) {
+		size_t bottom_n{  _size - _balanced_size };
+
+		for (size_t i=0; i< bottom_n; ++i) {
+			if (i==0) {
+				rotate( root.get(), root , direction::left);	
+				head = root.get();
+			}
+			else {
+				rotate( head->right(), head->_right , direction::left);	
+				head = head->right();
+			}
+		}
+
+
+		head = root.get();
+
+		auto t = _balanced_size;		
+		while (t>1) {
+			t = floor(static_cast<double>(t)/2);
+			for (size_t i=0; i< t; ++i) {
 				if (i==0) {
 					rotate( root.get(), root , direction::left);	
 					head = root.get();
 				}
 				else {
 					rotate( head->right(), head->_right , direction::left);	
-					head = head->right();
+				head = head->right();
 				}
 			}
 
+		}
 
-			head = root.get();
-
-			auto t = _balanced_size;		
-			while (t>1) {
-				t = floor(static_cast<double>(t)/2);
-				for (size_t i=0; i< t; ++i) {
-					if (i==0) {
-						rotate( root.get(), root , direction::left);	
-						head = root.get();
-					}
-					else {
-						rotate( head->right(), head->_right , direction::left);	
-					head = head->right();
-					}
-				}
-
-			}
-
-		}	
-		
+		/*
 		//final check
 		if (!is_balanced() ) {
 			std::cout << "error during balancing" << std::endl;	
 		} else {
 			std::cout << "succesfully balanced" << std::endl;		
 		}
+		*/
 		
 	}
 }
@@ -458,65 +458,56 @@ void bst<K,T, CMP>::rotate(node* oldroot, std::unique_ptr<node>& root_link, dire
 	if (oldroot->prev()) {
 		root_p = oldroot->prev();
 	}
+	
+	//detach the old root from whatever is above
 	root_link.release();
-
 
 	node* newroot;
 	node* newsub{nullptr};
 
 	switch (dir){
 		case direction::left: {			
-			//release the unique pointers to the new root and its left subtree
-			newroot = oldroot->_right.release();
-
+			//detach the new root from the old root
+			//detach the left subtree from the new root if it exists
+			
+			newroot = oldroot->detach_right();
 			if (newroot->_left) {
-				newsub = newroot->_left.release();
+				newsub = newroot->detach_left();
 			} 
-
-			//the left subtree becomes the right subtree of the old root
-			// the new root becomes the prevnode of the old root 
-			oldroot->_right.reset( newsub );
-			oldroot->set_prev( newroot );
-
-			//the old root becomes the prevnode of the new right subtree
+			
+			//attach the subtree to the old root
+			//attach the old root to the new root
+			
+			newroot->attach( direction::left, oldroot);
 			if (newsub) {
-				newsub->set_prev( oldroot );
+				oldroot->attach( direction::right, newsub);
 			}
-
-			//the old root becomes the new left subtree of the new root
-			//the prevnode of the new root is the root_p pointer
-			newroot->_left.reset( oldroot );
-			newroot->set_prev( root_p );
-
 
 			break;
 		}
 		case direction::right: {
-			//release the unique pointers to the new root and its right subtree
-			newroot = oldroot->_left.release();
-
+			//detach the new root from the old root
+			//detach the right subtree from the new root if it exists
+			
+			newroot = oldroot->detach_left();
 			if (newroot->_right) {
-				newsub = newroot->_right.release();
+				newsub = newroot->detach_right();
 			} 
-
-			//the right subtree becomes the left subtree of the old root
-			// the new root becomes the prevnode of the old root 
-			oldroot->_left.reset( newsub );
-			oldroot->set_prev( newroot );
-			//the old root becomes the prevnode of the new left subtree
+			
+			//attach the subtree to the old root
+			//attach the old root to the new root
+			
+			newroot->attach( direction::right, oldroot);
 			if (newsub) {
-				newsub->set_prev( oldroot );
+				oldroot->attach( direction::left, newsub);
 			}
 
-			//the old root becomes the new right subtree of the new root
-			//the prevnode of the new root is the root_p pointer
-			newroot->_right.reset( oldroot );
-			newroot->set_prev( root_p );
 			break;
-
 		}
 	}
-
+	
+	//fix the link between new root and parent
+	newroot->set_prev( root_p );
 	root_link.reset(newroot);
 
 }
