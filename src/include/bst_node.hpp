@@ -6,7 +6,6 @@
 
 
 
-enum class direction{left, right};
 
 template <typename K, typename T>
 class bst_node {

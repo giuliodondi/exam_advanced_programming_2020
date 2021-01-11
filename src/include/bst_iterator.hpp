@@ -1,12 +1,10 @@
 #pragma once
 
 #include <iostream>
-//#include <iterator>
 
 
 
-
-template <typename K, typename T, typename content_type, typename CMP>
+template <typename K, typename T, typename content_type>
 class bst_iterator {
 	
 	using node_t = bst_node<const K,T>;
@@ -57,6 +55,7 @@ class bst_iterator {
 		return tmp;
 	}
 	
+	//these return the node pointed to
 	node_t* node( ) noexcept {
 		return cur;
 	}
@@ -65,7 +64,6 @@ class bst_iterator {
 		return cur;
 	}
 	  
-
 	  
 	private:
 	
@@ -74,8 +72,10 @@ class bst_iterator {
 };
 
 //returns a pointer to the next node in the tree
-template <typename K, typename T, typename CONT, typename CMP>
-bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
+//the TREE_DBG flag enables printouts that inform
+//where the iterator is moving in the tree
+template <typename K, typename T, typename content_type>
+bst_node<const K,T>* bst_iterator<K,T,content_type>::nextnode( node_t* head) const {
 
 	/*
 	head starts at the current node 
@@ -99,7 +99,7 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 		if (head->right()) {
 
 			#ifdef TREE_DBG
-			std::cout <<"moving to the right" << std::endl;
+			std::cout <<"descending to the right" << std::endl;
 			#endif
 
 			head = head->right();
@@ -112,7 +112,7 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 		}
 		else {
 			#ifdef TREE_DBG
-			std::cout <<"moving up"  << std::endl;
+			std::cout <<"cliimbing up"  << std::endl;
 			#endif
 			auto tail{head};
 			head = head->prev()	;
@@ -123,7 +123,7 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 				}
 				else if (head->right() == tail) {
 					#ifdef TREE_DBG
-					std::cout <<"moving up" << std::endl;
+					std::cout <<"cliimbing up" << std::endl;
 					#endif
 					tail = head;
 					head = head->prev()	;
@@ -135,7 +135,7 @@ bst_node<const K,T>* bst_iterator<K,T,CONT,CMP>::nextnode( node_t* head) const {
 			}
 			#ifdef TREE_DBG
 			if (!head) {
-				std::cout <<"I'm at the top" << std::endl;
+				std::cout <<"reached the top" << std::endl;
 			}
 			#endif
 

@@ -130,9 +130,9 @@ int main() {
 	int a = 3;
 	int b = 5;
 	auto iter2 = tree1.find(a);
-	(iter2.node() && (iter2->first == a )) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl; 
+	(iter2.node()) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl; 
 	iter2 = tree1.find(b);
-	(iter2.node() && (iter2->first == b )) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
+	(iter2.node() ) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
 
 	
 	//testing constant iterators on constant tree2

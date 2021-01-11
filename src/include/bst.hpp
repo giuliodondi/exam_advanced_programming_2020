@@ -9,14 +9,17 @@
 #ifndef BST_H
 #define BST_H
 
-
+//declaration needed by the node and iterator classes
 template <typename K, typename T, typename CMP=std::less<K> >
 class bst;
+
+//enum to define directions
+enum class direction{left, right};
 
 #include "bst_node.hpp"
 #include "bst_iterator.hpp"
 
-
+//exception structure to throw a custom message during the balancing
 struct exception_during_balance {
 	std::string except_msg;
 	
@@ -38,11 +41,9 @@ class bst{
 	
 	public:
 	
-	
-
 		
-	using iterator = bst_iterator<const K, T, content_type , CMP>;
-  	using const_iterator = bst_iterator<const K, T, const content_type, CMP>;
+	using iterator = bst_iterator<const K, T, content_type>;
+  	using const_iterator = bst_iterator<const K, T, const content_type>;
 	
 	
 	
@@ -51,9 +52,7 @@ class bst{
 	
 	explicit bst( )
 	: root{nullptr}, _nodes{0}, comp_operator{}
-	{
-		//printf("tree constructor\n");
-	}
+	{}
 	
 	
 	~bst() noexcept = default;
@@ -70,7 +69,6 @@ class bst{
 	bst( const bst &x)
 	:_nodes{x._nodes}, comp_operator{x.comp_operator}
 	{
-		//printf("copy constructor\n");
 		if (x.root) {
 			copy_tree( root, nullptr,  x.root.get() ) ;
 		}
@@ -78,8 +76,6 @@ class bst{
 	
 	
 	bst& operator=( const bst &x) {
-		
-		//printf("copy assign\n");
 		root.reset();
 		auto tmp_bst = x;
 		*this = std::move(tmp_bst);
@@ -93,12 +89,10 @@ class bst{
 	
 	
 	std::pair<iterator, bool> insert(const content_type& new_content) {
-		//printf("l-insert\n");
 		return _insert(new_content);
 	}
 	
 	std::pair<iterator, bool> insert(content_type&& new_content) {
-		//printf("r-insert\n");
 		return _insert(std::move(new_content));
 	}
 	
@@ -158,22 +152,30 @@ class bst{
 		return _balanced( root.get() );
 	}
 	
+	//returns a copy of the comparator object
 	CMP key_comp() {
 		return comp_operator;	
 	}
 	
 	
+	//wrapper for balancing
+	//checks if the tree is actually unbalanced, if so
+	//creates a copy of the original and balances in a try block
+	//if anything is caught, revert
 	void balance() {
-		std::unique_ptr<node> tree_bk;
-		copy_tree( tree_bk, nullptr, root.get() ) ;
 		
-		try {
-			_balance();
-		}
-		catch (...) {
-			std::cout << "Error occured during balancing.\n"
-				<< "Reverting the tree to its original state." << std::endl;
-			root.reset(tree_bk.release());
+		if (!is_balanced() ) {
+			std::unique_ptr<node> tree_bk;
+			copy_tree( tree_bk, nullptr, root.get() ) ;
+
+			try {
+				_balance();
+			}
+			catch (...) {
+				std::cout << "Error occured during balancing.\n"
+					<< "Reverting the tree to its original state." << std::endl;
+				root.reset(tree_bk.release());
+			}
 		}
 		
 	}; 
@@ -204,7 +206,9 @@ class bst{
 		return out_pair.first->second;
 	};
 	
-		
+	//recursive copy of nodes
+	//given the previous node's pointer to this node, creates a new node
+	//then does the same for the two children
 	void copy_tree(std::unique_ptr<node>& node_ptr,node* prev_node, node* copy_node) const {
 		if (!copy_node) {
 			node_ptr.reset(nullptr);
@@ -216,6 +220,7 @@ class bst{
 		}
 	}
 	
+	//navigates to the far left of the tree
 	node* firstnode( node* head) const {
 		if (head) {
 			while (head->left()) {
@@ -225,7 +230,8 @@ class bst{
 		return head;
 	}
 	
-	
+	//calculates the depth of each subtree recursively, selects the max
+	//then adds one for the root itself
 	size_t _depth( node* head ) const {
 		if (!head) {
 			return 0;
@@ -237,6 +243,9 @@ class bst{
 		}
 	}
 	
+	//calculates the difference in depth of the left and right subtrees (must be <=1)
+	//as well as if the left and right sub-trees are themselves balanced
+
 	bool _balanced ( node* head ) const {
 		bool flag = true;
 		if (head) { 
@@ -256,7 +265,9 @@ class bst{
 };
 
 
-
+//common method to insert nodes in the right place
+//navigate down and compare keys. If there is equality, no new node is attached
+//special case if the tree is empty and this is the first node
 template <typename K, typename T, typename CMP >
 template <typename P >
 std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
@@ -309,55 +320,9 @@ std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& 
 }
 
 
-/*
-template <typename K, typename T, typename CMP >
-template <typename O >
-T&  bst<K,T, CMP>::subscripting( O&& key) {
-		
-	node* head = root.get();
-	content_type new_content{key,T{} };
-	
-	while (head) {
 
-		//if the comparison is positive go left
-		if ( comp_operator(  key,  head->content().first  ) ) {
-
-			if (head->left()) {
-				head = head->left();	
-			}
-			else {
-				head->attach(direction::left, new_content, head );
-				head = head->left();	
-				return head->content().second;
-			}
-
-		}
-		else if ( comp_operator( head->content().first, key  ) ) {
-			if (head->right()) {
-				head = head->right();	
-			}
-			else {
-				head->attach(direction::right, new_content, head );
-				head = head->right();	
-				return head->content().second;
-			}
-		}
-		else {
-			//failing the comparison and reverse comparison means the values are equal
-			return head->content().second;
-
-		}
-
-	}
-
-	root.reset( new node(new_content) );
-	return root->content().second;
-
-}
-*/
-
-
-
+//same navigation as the insert case, except no insertions are made
+//if the node is not present, an iterator to null is returned automatically
 template <typename K, typename T, typename CMP >
 typename bst<K,T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) noexcept{
 		
@@ -381,7 +346,8 @@ typename bst<K,T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) noexcept{
 	return 	iterator{head};
 }
 
-
+//same navigation as the insert case, except no insertions are made
+//if the node is not present, an iterator to null is returned automatically
 template <typename K, typename T, typename CMP >
 typename bst<K,T, CMP>::const_iterator  bst<K,T, CMP>::find(const K& key) const noexcept{
 		
@@ -406,40 +372,42 @@ typename bst<K,T, CMP>::const_iterator  bst<K,T, CMP>::find(const K& key) const 
 }
 
 
-
+//balance the tree
+//we will destroy the tree structure and create a vector of smart pointers to the nodes in order
+//we first create a vector fo simple pointers to the node in order so that we can navigate
+//because as we destroy the tree the iterators no longer work
+//check if the new tree is balanced
 template <typename K, typename T, typename CMP >
 void bst<K,T, CMP>::_balance() {
 	
-	if (!is_balanced() ) {
-	
-		std::vector<node*> store_nodes_tmp;
-		std::vector<std::unique_ptr<node>> store_nodes;
+	std::vector<node*> store_nodes_tmp;
+	std::vector<std::unique_ptr<node>> store_nodes;
 
-		for ( auto iter = begin(); iter != end(); iter++) {
-			store_nodes_tmp.push_back(iter.node());
-		}
-
-
-		for ( auto iter = store_nodes_tmp.begin(); iter != store_nodes_tmp.end(); iter++) {
-
-			std::unique_ptr<node> this_node;
-			if ((*iter)->prev()) {
-				(*iter)->detach_prev();
-				this_node.reset(*iter);
-			} else {
-				root.release();
-				this_node.reset(*iter);
-			}
-
-			store_nodes.push_back(std::move(this_node));
-
-		}
-
-
-		root.reset( build_tree_recursive( store_nodes, 0 , store_nodes.size() ) );
-		root.get()->set_prev(nullptr);
-	
+	for ( auto iter = begin(); iter != end(); iter++) {
+		store_nodes_tmp.push_back(iter.node());
 	}
+
+
+	for ( auto iter = store_nodes_tmp.begin(); iter != store_nodes_tmp.end(); iter++) {
+
+		std::unique_ptr<node> this_node;
+		if ((*iter)->prev()) {
+			(*iter)->detach_prev();
+			this_node.reset(*iter);
+		} else {
+			root.release();
+			this_node.reset(*iter);
+		}
+
+		store_nodes.push_back(std::move(this_node));
+
+	}
+
+
+	root.reset( build_tree_recursive( store_nodes, 0 , store_nodes.size() ) );
+	root.get()->set_prev(nullptr);
+	
+	
 	//final check
 	if (!is_balanced() ) {
 		throw exception_during_balance{"Balancing did not produce a balanced tree."};
@@ -447,6 +415,10 @@ void bst<K,T, CMP>::_balance() {
 		
 }
 
+//recursively build a balanced tree given an std vector of smart pointers to node
+//find the new root as the middle node, call on the left and right sub-arrays and attach the reulting sub-trees
+//finally release the node we're pointing to and return its pointer so that ownership is transferred 
+//to the node above
 template <typename K, typename T, typename CMP >
 typename bst<K,T, CMP>::node* bst<K,T, CMP>::build_tree_recursive( std::vector<std::unique_ptr<node>>& ptr_vec, int start, int end ) {
 	
