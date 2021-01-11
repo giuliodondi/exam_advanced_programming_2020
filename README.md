@@ -13,6 +13,8 @@ Make has three targets (in addition to clean which removes all the binaries):
 
 The benchmark is executed as **./tree_benchmark.x N_MAX N_MIN STEP OUTFILE**, and it will generate trees and std::maps with size incrementing in a loop from N_MIN to N_MAX with step STEP. For each size, the time of a full lookup of all the elements as well as the number of comparisons done in the process is gathered for every test. The test results are written in the file OUTFILE, if a full path is specified the directories will not automatically be created. 
 The tests are: std::map loaded with ordered integers, binary tree loaded with ordered integers, balancing of the tree, balanced binary tree loaded with ordered integer, std::map loaded with shuffled integers, binary tree loaded with shuffled integers, balancing of the shuffled tree, balanced binary tree loaded with shuffled integers.
+
 The output file is formatted as follows (worst indicates the ordered case and shuf indicates the shuffled case):
-Size, worst_map_time, worst_map_count, worst_tree_time, worst_tree_count, worst_balancing_t, worst_tree_balanced_time, worst_tree_balanced_count, shuf_map_time, shuf_map_count, shuf_tree_time, shuf_tree_count, shuf_balancing_t, shuf_tree_balanced_time, shuf_tree_balanced_count
+
+|Size|worst_map_time|worst_map_count|worst_tree_time|worst_tree_count|worst_balancing_t|worst_tree_balanced_time|worst_tree_balanced_count|shuf_map_time|shuf_map_count|shuf_tree_time|shuf_tree_count|shuf_balancing_t|shuf_tree_balanced_time|shuf_tree_balanced_count
 
