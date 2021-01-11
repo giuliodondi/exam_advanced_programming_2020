@@ -23,7 +23,6 @@ int main() {
 	
 	//feed in positive and negative numbers
 	for (auto i=1; i<10; ++i) {
-		//auto x = std::pair<const int,int>( ( i%2) ? -i : i , i );
 		auto x = std::pair<const int,int>(i,i);
 		tree1.insert(x);
 	}
@@ -58,8 +57,13 @@ int main() {
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	
 
+	
+	
 	//make a smaller tree
-	//std::make_pair<int&, int&>{2,222};
+	
+	
+	
+
 	int k = 2;
 	int v = 222;
 	auto mypair = std::pair<const int, int>(k,v);
