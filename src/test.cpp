@@ -13,6 +13,12 @@ int main() {
 	std::cout << std::endl << "empty tree1\n" <<  tree1 << std::endl;
 	std::cout << "is balanced? : " << tree1.is_balanced() << std::endl;
 	
+	//test insert
+	auto ins_pair = tree1.insert(std::pair<const int,int>(0,0));
+	std::cout << "did I insert the new key? " << ins_pair.second <<   std::endl;
+	std::cout << "whch key? " << ins_pair.first->first <<   std::endl;
+	ins_pair = tree1.insert(std::pair<const int,int>(0,0));
+	std::cout << "did I insert the new key? " << ins_pair.second <<   std::endl;
 	
 	
 	//feed in positive and negative numbers
@@ -31,7 +37,9 @@ int main() {
 	tree1.emplace(-1,111);
 	const int x = -3;
 	const int y = -333;
-	tree1.emplace(x,y);
+	auto emp_pair = tree1.emplace(x,y);
+	std::cout << "did I insert the new key? " << emp_pair.second <<   std::endl;
+	std::cout << "whch key? " << emp_pair.first->first <<   std::endl;
 		
 	//test print 
 	std::cout << std::endl << "full unbalanced tree after emplace\n" <<  tree1 << std::endl;

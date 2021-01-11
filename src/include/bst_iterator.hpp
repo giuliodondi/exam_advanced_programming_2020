@@ -6,7 +6,7 @@
 
 
 
-template <typename K, typename T, typename CONT, typename CMP>
+template <typename K, typename T, typename content_type, typename CMP>
 class bst_iterator {
 	
 	using node_t = bst_node<const K,T>;
@@ -15,14 +15,13 @@ class bst_iterator {
 	public:
 	
 		
-	using content_type = CONT ;
-		
 	using content_ref = content_type &;
 	using content_ptr = content_type *;
 	using difference_type = std::ptrdiff_t;
 	using iterator_category = std::forward_iterator_tag;
 	
 	bst_iterator() = default;
+	
 	explicit bst_iterator(node_t* n)
 	: cur{n}
 	{}
@@ -66,6 +65,7 @@ class bst_iterator {
 		return cur;
 	}
 	  
+
 	  
 	private:
 	

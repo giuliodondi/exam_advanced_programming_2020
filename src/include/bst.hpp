@@ -204,7 +204,6 @@ class bst{
 		return out_pair.first->second;
 	};
 	
-	//node* _find(const K& key) const;
 		
 	void copy_tree(std::unique_ptr<node>& node_ptr,node* prev_node, node* copy_node) const {
 		if (!copy_node) {
@@ -262,50 +261,53 @@ template <typename K, typename T, typename CMP >
 template <typename P >
 std::pair< typename bst<K, T, CMP>::iterator, bool>  bst<K,T, CMP>::_insert(P&& new_content) {
 
-
 	node* head = root.get();
+	bool newflag=true;
+	
+	if(head) {
+		while (head) {
+			//if the comparison is positive go left
+			if ( comp_operator(  new_content.first,  head->content().first  ) ) {
 
-	while (head) {
-		//if the comparison is positive go left
-		if ( comp_operator(  new_content.first,  head->content().first  ) ) {
+				if (head->left()) {
+					head = head->left();	
+				}
+				else {
+					++_nodes;
+					head->attach(direction::left, std::forward<P>(new_content) );
+					head = head->left();
+					break;
+				}
 
-			if (head->left()) {
-				head = head->left();	
+			}
+			else if ( comp_operator( head->content().first, new_content.first  ) ) {
+				if (head->right()) {
+					head = head->right();	
+				}
+				else {
+					++_nodes;
+					head->attach(direction::right, std::forward<P>(new_content) );
+					head = head->right();
+					break;
+				}
 			}
 			else {
-				++_nodes;
-				head->attach(direction::left, std::forward<P>(new_content) );
-				iterator out_iter{head->left()};
-				return std::pair<iterator, bool> {out_iter, true};
+				//failing the comparison and reverse comparison means the values are equal
+				newflag=false;
+				break;
 			}
 
 		}
-		else if ( comp_operator( head->content().first, new_content.first  ) ) {
-			if (head->right()) {
-				head = head->right();	
-			}
-			else {
-				++_nodes;
-				head->attach(direction::right, std::forward<P>(new_content) );
-				iterator out_iter{head->right()};
-				return std::pair<iterator, bool> {out_iter, true};
-			}
-		}
-		else {
-			//failing the comparison and reverse comparison means the values are equal
-			iterator out_iter{head};
-			return std::pair<iterator, bool> {out_iter, false};
-		}
-
+	} else {
+		_nodes=1;
+		root.reset(new node( new_content ) );
+		head = root.get();
 	}
 
-	_nodes=1;
-	root.reset(new node( new_content ) );
-	iterator out_iter{root.get()};
-	return std::pair<iterator, bool> {out_iter, true};
-
-
+	iterator out_iter{head};
+	return std::pair<iterator, bool> {out_iter, newflag};
 }
+
 
 /*
 template <typename K, typename T, typename CMP >
@@ -372,8 +374,6 @@ typename bst<K,T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) noexcept{
 		}
 		else {
 			//failing the comparison and reverse comparison means the values are equal
-			//iterator out_iter{head};
-			//return out_iter;
 			break;
 		}
 	}
@@ -398,8 +398,6 @@ typename bst<K,T, CMP>::const_iterator  bst<K,T, CMP>::find(const K& key) const 
 		}
 		else {
 			//failing the comparison and reverse comparison means the values are equal
-			//iterator out_iter{head};
-			//return out_iter;
 			break;
 		}
 	}
