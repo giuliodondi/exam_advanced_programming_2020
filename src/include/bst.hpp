@@ -26,6 +26,8 @@ struct exception_during_balance {
 	exception_during_balance(std::string s)
 	: except_msg{std::move(s)}
 	{}
+	
+	const char* what() const { return except_msg.c_str(); }
 };
 
 
@@ -69,8 +71,12 @@ class bst{
 	bst( const bst &x)
 	:_nodes{x._nodes}, comp_operator{x.comp_operator}
 	{
-		if (x.root) {
-			copy_tree( root, nullptr,  x.root.get() ) ;
+		try{
+			if (x.root) {
+				copy_tree( root, nullptr,  x.root.get() ) ;
+			}
+		} catch (const std::bad_alloc& e) {
+			 std::cout << "Allocation error during tree copy: " << e.what() << std::endl;
 		}
 	}
 	
@@ -89,11 +95,23 @@ class bst{
 	
 	
 	std::pair<iterator, bool> insert(const content_type& new_content) {
-		return _insert(new_content);
+		auto out_pair = std::pair<iterator, bool> {end(), false};
+		try{
+			out_pair = _insert(new_content);
+		} catch (const std::bad_alloc& e) {
+			 std::cout << "Allocation error during node insertion: " << e.what() << std::endl;
+		}
+		return out_pair;
 	}
 	
 	std::pair<iterator, bool> insert(content_type&& new_content) {
-		return _insert(std::move(new_content));
+		auto out_pair = std::pair<iterator, bool> {end(), false};
+		try{
+			out_pair = _insert(std::move(new_content));
+		} catch (const std::bad_alloc& e) {
+			 std::cout << "Allocation error during node insertion: " << e.what() << std::endl;
+		}
+		return out_pair;
 	}
 	
 	template<class... Types>
@@ -140,20 +158,20 @@ class bst{
 	}
 	
 	
-	auto size() const {
+	auto size() const noexcept {
 		return _nodes;	
 	}
 	
-	auto depth() const {
+	auto depth() const noexcept{
 		return 	_depth(root.get() );
 	}
 	
-	auto is_balanced() const{
+	auto is_balanced() const noexcept{
 		return _balanced( root.get() );
 	}
 	
 	//returns a copy of the comparator object
-	CMP key_comp() {
+	CMP key_comp() noexcept{
 		return comp_operator;	
 	}
 	
@@ -166,7 +184,13 @@ class bst{
 		
 		if (!is_balanced() ) {
 			std::unique_ptr<node> tree_bk;
-			copy_tree( tree_bk, nullptr, root.get() ) ;
+			try {
+				copy_tree( tree_bk, nullptr, root.get() ) ;
+			} catch (const std::bad_alloc& e) {
+				 std::cout << "Allocation error during tree copy: " << e.what() << std::endl;
+				std::cout << "Cannot continue with balancing." << std::endl;
+				return;
+			}
 
 			try {
 				_balance();
@@ -221,7 +245,7 @@ class bst{
 	}
 	
 	//navigates to the far left of the tree
-	node* firstnode( node* head) const {
+	node* firstnode( node* head) const noexcept {
 		if (head) {
 			while (head->left()) {
 				head = head->left();	
@@ -232,7 +256,7 @@ class bst{
 	
 	//calculates the depth of each subtree recursively, selects the max
 	//then adds one for the root itself
-	size_t _depth( node* head ) const {
+	size_t _depth( node* head ) const noexcept {
 		if (!head) {
 			return 0;
 		}
@@ -246,7 +270,7 @@ class bst{
 	//calculates the difference in depth of the left and right subtrees (must be <=1)
 	//as well as if the left and right sub-trees are themselves balanced
 
-	bool _balanced ( node* head ) const {
+	bool _balanced ( node* head ) const noexcept {
 		bool flag = true;
 		if (head) { 
 			auto depth_l = 	_depth(head->left());

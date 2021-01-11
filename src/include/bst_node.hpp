@@ -44,20 +44,24 @@ class bst_node {
 	//therefore we shouldn't need copy semantics
 	bst_node( const bst_node &x) = delete;
 	bst_node& operator=( const bst_node &x) = delete;
+	
+	
+	~bst_node() noexcept = default;
+	
 
-	content_type& content() {
+	content_type& content() noexcept {
 		return _content;	
 	}
 
-	bst_node* left() {
+	bst_node* left() noexcept {
 		return 	_left.get();
 	}
 
-	bst_node* right() {
+	bst_node* right() noexcept {
 		return 	_right.get();
 	}
 
-	bst_node*  prev() const {
+	bst_node*  prev() const noexcept {
 		return 	_prev;
 	}
 	
@@ -158,14 +162,15 @@ void bst_node< K, T >::attach( direction dir, bst_node* new_node) {
 template <typename K, typename T>
 template <typename P >	
 void bst_node< K, T >::attach( direction dir, P&& new_content ) {
+	
 	switch (dir){
-			case direction::left:
-				_left.reset( new bst_node( std::forward<P>(new_content), this ) );
-			break;
-			case direction::right:
-				_right.reset( new bst_node( std::forward<P>(new_content), this ) );
-			break;
-		}	
+		case direction::left:
+			_left.reset( new bst_node( std::forward<P>(new_content), this ) );
+		break;
+		case direction::right:
+			_right.reset( new bst_node( std::forward<P>(new_content), this ) );
+		break;
+	}	
 }
 
 

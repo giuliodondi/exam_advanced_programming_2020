@@ -38,7 +38,7 @@ int main() {
 	const int y = -333;
 	auto emp_pair = tree1.emplace(x,y);
 	std::cout << "did I insert the new key? " << emp_pair.second <<   std::endl;
-	std::cout << "whch key? " << emp_pair.first->first <<   std::endl;
+	//std::cout << "whch key? " << emp_pair.first->first <<   std::endl;
 		
 	//test print 
 	std::cout << std::endl << "full unbalanced tree after emplace\n" <<  tree1 << std::endl;

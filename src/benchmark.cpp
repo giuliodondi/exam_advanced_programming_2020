@@ -105,7 +105,7 @@ int main(int argc, char ** argv) {
 	outfile.open(outname);
 
 	if (outfile.is_open()) {
-		outfile << "size,worst_m,worst_m_c,worst_t,worst_t_c,worst_t_bal_t,worst_t_b,worst_t_c,";
+		outfile << "size,worst_m,worst_m_c,worst_t,worst_t_c,worst_t_bal_t,worst_t_b,worst_t_b_c,";
 		outfile << "shuf_m,shuf_m_c,shuf_t,shuf_t_c,shuf_t_bal_t,shuf_t_b,shuf_t_c\n";
 	}
 	outfile.close();
@@ -121,7 +121,7 @@ int main(int argc, char ** argv) {
 	
 	for (int n=min_n; n< max_n; n+=step ) {
 		
-		std::cout << "\rCurrent size : " << n << std::flush;
+		//std::cout << "\rCurrent size : " << n << std::flush;
 	
 		//elements in order
 		vec_t elem;
@@ -136,6 +136,8 @@ int main(int argc, char ** argv) {
 		std::mt19937 gen(dev());
 		std::shuffle(shuf_elem.begin(),shuf_elem.end(),gen);
 		
+		std::cout << elem.size() << std::endl;
+		std::cout << shuf_elem.size() << std::endl;
 		
 		map_t std_map{};
 		mydata worst_map_data;
