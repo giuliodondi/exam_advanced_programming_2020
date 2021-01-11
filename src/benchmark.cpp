@@ -10,133 +10,178 @@
 
 #include "bst.hpp"
 
-struct time_avg_stdev {
+struct mydata {
 	
-	double t{0};
-	double sq_t{0};
-	double avg{0};
-	double stdev{0};
-	
-	void accum( double dt) {
-		t += dt;
-		sq_t += pow(dt,2);
-	}
-	
-	void calculate( int n ) {
-		avg = t/(static_cast<double>(n) );	
-		auto sqt = sq_t/(static_cast<double>(n) );	
-		stdev= sqrt( sqt - pow(avg,2)  );
-	}
-	
+	double lookup_avg_t{0};
+	double balance_t{0};
+	long int comps{0};
 	
 };
 
 
+template <typename T, typename CMP>
+struct comp_op {
+	
+	size_t c;
+	CMP op;
+	
+	comp_op()
+	: c{0}, op{}
+	{}
 
-template<typename TREE >
-void do_the_reps( int n , int reps, TREE* mytree_p , time_avg_stdev* t_struct ,  std::vector<int>* elem_vec ) {
+
+	bool operator()( const T& a, const T& b) {
+		++c;
+        return op(a,b);
+    }
+
+	auto count() const {
+		return c;
+	}
+	
+
+};
+
+
+
+
+
+template<typename TREE , typename VEC_T >
+void full_lookup( int n , TREE* mytree_p , mydata* data ,  VEC_T* elem_vec ) {
 	
 	
 	auto local_vec = *elem_vec;
 	
-	for (int j =0; j < reps; j++){
+	auto count_before{ mytree_p->key_comp().count() };
 		
-		//full lookup for the std::map
-		auto start = std::chrono::system_clock::now();
-		for (int k =0; k < n; k++){
-			mytree_p->find(local_vec[k]);
-		}
-		auto end = std::chrono::system_clock::now();
-		auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-		double avgdt{ static_cast<double>(elapsed.count())/static_cast<double>(n)};
-		t_struct->accum( avgdt );
+	//full lookup for the std::map
+	auto start = std::chrono::system_clock::now();
+	for (int k =0; k < n; k++){
+		mytree_p->find(local_vec[k]);
 	}
-	t_struct->calculate(reps);
+	auto end = std::chrono::system_clock::now();
+	
+	auto count_after{ mytree_p->key_comp().count() };
+	
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	double avgdt{ static_cast<double>(elapsed.count())/static_cast<double>(n)};
+	
+	data->comps = ( count_after - count_before);
+	data->lookup_avg_t = avgdt;
+
+}
+
+template<typename TREE >
+void balance_my_tree( TREE* mytree_p , mydata* data ) {
+
+
+	auto start = std::chrono::system_clock::now();
+	
+	mytree_p->balance();
+	
+	auto end = std::chrono::system_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+	double balancet = static_cast<double>(elapsed.count());
+	data->balance_t = balancet;
 }
 
 
 
 int main(int argc, char ** argv) {
 	
-	if (argc <3) {
-		std::cerr << "Usage : "<< argv[0] << " tree_max_size tree_min_size [iterations_per_size]"  << std::endl;
+	if (argc <5) {
+		std::cerr << "Usage : "<< argv[0] << " tree_max_size tree_min_size size_step output_file"  << std::endl;
 		exit(1);
 	}
 	
 	int max_n{atoi(argv[1])};
 	int min_n{atoi(argv[2])};
-	int reps {1};
+	int step{atoi(argv[3])};
+	std::string outname{argv[4]};
 	
-	if (argc >3) {
-		reps = atoi(argv[3]);
-	}
 	
-	std::string outname{"tree_benchmark_out.txt"};
-	std::remove ( "tree_benchmark_out.txt");
-		
+	
+	std::ofstream outfile;
+	outfile.open(outname);
 
-	std::default_random_engine gen(time(NULL));
-
-	std::vector<int> elem;
-	for (int k =0; k < min_n; k++){
-		elem.insert(elem.begin(),k);
+	if (outfile.is_open()) {
+		outfile << "size,worst_m,worst_m_c,worst_t,worst_t_c,worst_t_bal_t,worst_t_b,worst_t_c,";
+		outfile << "shuf_m,shuf_m_c,shuf_t,shuf_t_c,shuf_t_bal_t,shuf_t_b,shuf_t_c\n";
 	}
-	
-	
-	for (int n=min_n; n< max_n; n+=min_n ) {
-		
-		std::cout << std::endl << "\rCurrent size : " << n << std::flush;
+	outfile.close();
 	
 		
+	using T = int;
+	using comp_t = comp_op<T,std::less<T>>;
+	using pair_t = std::pair<const T,T>;
+	using tree_t = bst<T,T,comp_t> ;
+	using map_t = std::map<T,T,comp_t> ;
+	using vec_t = std::vector<T>;
+	
+	
+	for (int n=min_n; n< max_n; n+=step ) {
+		
+		std::cout << "\rCurrent size : " << n << std::flush;
+	
+		//elements in order
+		vec_t elem;
 		for (int k =0; k < n; k++){
-			elem.insert(elem.begin(),k);
+			elem.push_back(static_cast<T>(k));
 		}
 
+		//vector of shuffled elements
+		vec_t shuf_elem{elem};
+			
+		std::random_device dev;
+		std::mt19937 gen(dev());
+		std::shuffle(shuf_elem.begin(),shuf_elem.end(),gen);
 		
 		
-		std::map<int, int> stdmap;
-		time_avg_stdev map_t;
+		map_t std_map{};
+		mydata worst_map_data;
 		
 		
+		tree_t worst_tree{};
+		mydata worst_tree_data;
+		mydata worst_tree_balanced_data;
 		
-		bst<int,int> worst_tree{};
-		time_avg_stdev worst_tree_t;
-		time_avg_stdev worst_tree_balanced_t;
-		
-		std::pair<const int,int> data_pair;
 		
 		for (int k =0; k < n; k++){
-			auto x = std::pair<const int,int>(elem[k],elem[k]);
-			stdmap.insert( x );
+			auto x = pair_t(elem[k],elem[k]);
+			std_map.insert( x );
 			worst_tree.insert( x );
 		}
 		
 		
-		do_the_reps( n , reps, &stdmap, &map_t, &elem ) ;
-		do_the_reps( n , reps, &worst_tree, &worst_tree_t, &elem ) ;
+		full_lookup( n , &std_map, &worst_map_data, &shuf_elem ) ;
+		full_lookup( n , &worst_tree, &worst_tree_data, &shuf_elem ) ;
 		
-		worst_tree.balance();
+		balance_my_tree( &worst_tree, &worst_tree_balanced_data );
 		
-		do_the_reps( n , reps, &worst_tree, &worst_tree_balanced_t, &elem ) ;
+		full_lookup( n , &worst_tree, &worst_tree_balanced_data, &shuf_elem ) ;
 		
 		worst_tree.clear();
+		std_map.clear();
 		
+		mydata shuf_map_data;
 		
-		std::vector<int> shuf_elem{elem};
-		std::shuffle(shuf_elem.begin(),shuf_elem.end(),gen);
-		
-		bst<int,int> shuf_tree{};
-		time_avg_stdev shuf_tree_t;
-		time_avg_stdev shuf_tree_balanced_t;
+
+		tree_t shuf_tree{};
+		mydata shuf_tree_data;
+		mydata shuf_tree_t_balanced_data;
 		
 		for (int k =0; k < n; k++){
-			auto x = std::pair<const int,int>(shuf_elem[k],shuf_elem[k]);
+			auto x = pair_t(shuf_elem[k],shuf_elem[k]);
 			shuf_tree.insert( x );
+			std_map.insert( x );
 		}
 		
-		do_the_reps( n , reps, &shuf_tree, &shuf_tree_t, &shuf_elem ) ;
-		shuf_tree.balance();
-		do_the_reps( n , reps, &shuf_tree, &shuf_tree_balanced_t, &shuf_elem ) ;
+		full_lookup( n , &std_map, &shuf_map_data, &shuf_elem ) ;
+		full_lookup( n , &shuf_tree, &shuf_tree_data, &shuf_elem ) ;
+		
+		balance_my_tree( &shuf_tree, &shuf_tree_t_balanced_data );
+		
+		full_lookup( n , &shuf_tree, &shuf_tree_t_balanced_data, &shuf_elem ) ;
 		
 		
 
@@ -144,18 +189,23 @@ int main(int argc, char ** argv) {
 		outfile.open(outname, std::ios_base::app);
 
 		if (outfile.is_open()) {
-			outfile << n << "," <<  map_t.avg << "," << map_t.stdev;
-			outfile << n << "," <<  worst_tree_t.avg << "," << worst_tree_t.stdev;
-			outfile << n << "," <<  worst_tree_balanced_t.avg << "," << worst_tree_balanced_t.stdev;
-			outfile << n << "," <<  shuf_tree_t.avg << "," << shuf_tree_t.stdev;
-			outfile << n << "," <<  shuf_tree_balanced_t.avg << "," << shuf_tree_balanced_t.stdev << "\n";
+			outfile << n << " " <<  worst_map_data.lookup_avg_t << " " <<  worst_map_data.comps ;
+			
+			outfile << " " <<  worst_tree_data.lookup_avg_t << " " <<  worst_tree_data.comps ;
+			outfile << " " <<  worst_tree_balanced_data.balance_t ;
+			outfile << " " <<  worst_tree_balanced_data.lookup_avg_t << " " <<  worst_tree_balanced_data.comps ;
+			
+			outfile << " " <<  shuf_map_data.lookup_avg_t << " " <<  shuf_map_data.comps ;
+			
+			outfile << " " <<  shuf_tree_data.lookup_avg_t << " " <<  shuf_tree_data.comps ;
+			outfile << " " <<  shuf_tree_t_balanced_data.balance_t ;
+			outfile << " " <<  shuf_tree_t_balanced_data.lookup_avg_t << " " <<  shuf_tree_t_balanced_data.comps ;
+			
+			outfile << "\n";
 			outfile.close();
 		}
 		
 		
-		for (int k =n; k < (n+min_n); k++){
-			elem.insert(elem.begin(),k);
-		}
 	
 	}
 	

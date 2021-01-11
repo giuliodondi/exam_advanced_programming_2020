@@ -4,6 +4,8 @@
 #include <iostream>
 
 
+
+
 int main() {
 	
 	//create a backwards tree, test print the empty tree
@@ -25,10 +27,11 @@ int main() {
 	
 	
 	
-	
 	//test emplace
 	tree1.emplace(-1,111);
-	tree1.emplace(-3,333);
+	const int x = -3;
+	const int y = -333;
+	tree1.emplace(x,y);
 		
 	//test print 
 	std::cout << std::endl << "full unbalanced tree after emplace\n" <<  tree1 << std::endl;
@@ -37,6 +40,7 @@ int main() {
 	//test balancing 
 	std::cout << "is balanced? : " << tree1.is_balanced() << std::endl;
 	tree1.balance() ; 
+	std::cout << "is balanced? : " << tree1.is_balanced() << std::endl;
 	std::cout << std::endl << "balanced tree1\n" <<  tree1 << std::endl;
 	
 	
@@ -94,10 +98,14 @@ int main() {
 	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
 	int newval = 1234;
 	std::cout << "changing the value to "<< newval << std::endl;
-	tree1[find] = newval;
+	tree1[find] = newval;	
 	std::cout << "tree1["<< find << "]=" << tree1[find] << std::endl;
-	std::cout << std::endl << "lookng for the r-value key 4\n"<< std::endl;
+	
+	std::cout << std::endl << "creating the r-value key 4\n"<< std::endl;
+	tree1[4] = 4321;
 	std::cout << "tree1[4]=" << tree1[4] << std::endl;
+
+	std::cout << std::endl << "tree1\n" <<  tree1 << std::endl;
 	
 	//testing the iterators and *, -> operators
 	std::cout << std::endl <<"iterators" << std::endl;
@@ -117,8 +125,7 @@ int main() {
 	(iter2.node() && (iter2->first == a )) ? std::cout << "Key "<< a << " is present" << std::endl : std::cout << "Key "<< a << " not present " << std::endl; 
 	iter2 = tree1.find(b);
 	(iter2.node() && (iter2->first == b )) ? std::cout << "Key "<< b << " is present" << std::endl : std::cout << "Key "<< b << " not present " << std::endl;
-	
-	
+
 	
 	//testing constant iterators on constant tree2
 	std::cout << std::endl <<"const iterators" << std::endl;
@@ -154,83 +161,4 @@ int main() {
 	
 	
 	
-	return 0;
-	//
-	
-	/*
-	
-	//mytree.rotate( mytree.find(12).node(), direction::left);
-	//std::cout << std::endl << "tree1\n" <<  mytree << std::endl;
-	
-	const bst<int,int,std::greater<int>> mytree2{mytree};
-	
-	
-	bst<int,int,std::greater<int>>::iterator iter = mytree.begin();
-	//bst<int,int>::const_iterator iter3 = mytree.cbegin();
-	
-	//bst<int,int>::const_iterator iter2 = mytree2.begin();
-	//bst<int,int>::const_iterator iter4 = mytree2.cbegin();
-	
-	return 0;
-	
-	
-	std::pair<int,int> mypair (3,123);
-	
-	mytree.insert(mypair);
-	
-	const std::pair<int,int> mypair2 (1,1);
-	
-	mytree.insert(mypair2);
-	
-	mytree.insert(std::pair<int,int>(1,1));
-	
-	
-	
-	
-	
-	int a=7;
-	mytree.emplace(a,a);
-	
-		
-	
-	std::cout << std::endl << "tree1\n" <<  mytree << std::endl;
-		
-	std::cout <<  mytree[4] << std::endl;
-	
-	
-	std::cout <<  (*mytree.find(3)).second << std::endl;
-	
-	int i = 5;
-	int val_i = mytree[i];
-	
-	std::cout <<  val_i << std::endl;
-	
-	//bst<int,int>::iterator itr = mytree.begin();
-	//bst<int,int>::const_iterator c_itr = mytree.cbegin();
-	
-	
-	bst<int,int> mytree2 {};
-	
-	mytree2 = mytree;
-		
-	std::cout << "tree2\n" <<  mytree2 << std::endl;
-	
-	mytree.clear();
-	
-	mytree.insert(std::pair<int,int>(2,1));
-	mytree.insert(std::pair<int,int>(-1,-1));
-	std::cout << mytree << std::endl;
-	
-	
-	//bst<int,int> mytree2 {std::move(mytree)};
-	//mytree2 = bst<int,int>{std::move(mytree)};
-	
-	
-	mytree = bst<int,int>{};
-	mytree.insert(std::pair<int,int>(-2,-2));
-	std::cout << mytree << std::endl;
-	
-	
-	return 0;	
-	*/
 }

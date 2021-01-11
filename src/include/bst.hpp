@@ -32,13 +32,13 @@ class bst{
 	using node = bst_node<const K,T>;
 	using content_type = std::pair<const K, T>;
 	
-	
 	std::unique_ptr<node>  root;
 	std::size_t _nodes;
 	CMP comp_operator;	
 	
-	
 	public:
+	
+	
 
 		
 	using iterator = bst_iterator<const K, T, content_type , CMP>;
@@ -106,7 +106,6 @@ class bst{
 	std::pair<iterator,bool> emplace(Types&&... args)
 	{
 		return insert(content_type{(args)...});
-		//return insert(content_type{std::forward<Types>(args)...});
 	}
 		
 	
@@ -118,15 +117,9 @@ class bst{
 		return 	subscripting( std::move(key) );
 	}
 
+	iterator find(const K& key) noexcept;
+	const_iterator find(const K& key) const noexcept ;
 	
-	iterator find(const K& key) noexcept {
-		return 	iterator{_find( key )};	
-	}
-	
-	const_iterator find(const K& key) const noexcept {
-		return 	const_iterator{_find( key )};	
-	}
-
 	
 	iterator begin() noexcept {
 		return 	iterator{firstnode(root.get())};
@@ -165,6 +158,10 @@ class bst{
 		return _balanced( root.get() );
 	}
 	
+	CMP key_comp() {
+		return comp_operator;	
+	}
+	
 	
 	void balance() {
 		std::unique_ptr<node> tree_bk;
@@ -181,7 +178,6 @@ class bst{
 		
 	}; 
 	
-	//void balance2(); 
 	
 	friend std::ostream& operator<<(std::ostream& os, const bst& x) {		
 		os <<  "Size[" << x.size() << "]  Depth[" << x.depth() << "]"<< std::endl;
@@ -208,7 +204,7 @@ class bst{
 		return out_pair.first->second;
 	};
 	
-	node* _find(const K& key) const;
+	//node* _find(const K& key) const;
 		
 	void copy_tree(std::unique_ptr<node>& node_ptr,node* prev_node, node* copy_node) const {
 		if (!copy_node) {
@@ -358,8 +354,10 @@ T&  bst<K,T, CMP>::subscripting( O&& key) {
 }
 */
 
+
+
 template <typename K, typename T, typename CMP >
-typename bst<K,T, CMP>::node*  bst<K,T, CMP>::_find(const K& key) const{
+typename bst<K,T, CMP>::iterator  bst<K,T, CMP>::find(const K& key) noexcept{
 		
 	node* head = root.get();
 			
@@ -380,7 +378,33 @@ typename bst<K,T, CMP>::node*  bst<K,T, CMP>::_find(const K& key) const{
 		}
 	}
 	
-	return head;
+	return 	iterator{head};
+}
+
+
+template <typename K, typename T, typename CMP >
+typename bst<K,T, CMP>::const_iterator  bst<K,T, CMP>::find(const K& key) const noexcept{
+		
+	node* head = root.get();
+			
+	while (head) {
+		
+		//if the comparison is positive go left
+		if ( comp_operator(  key,  head->content().first  ) ) {
+			head = head->left();	
+		}
+		else if ( comp_operator( head->content().first, key  ) ) {
+			head = head->right();	
+		}
+		else {
+			//failing the comparison and reverse comparison means the values are equal
+			//iterator out_iter{head};
+			//return out_iter;
+			break;
+		}
+	}
+	
+	return const_iterator{head};
 }
 
 
